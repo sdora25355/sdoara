@@ -1,0 +1,47 @@
+name: Multi-Account Pro From boudkI
+
+on:
+
+  workflow_dispatch: 
+permissions:
+  contents: write 
+
+jobs:
+  run-farm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360 
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 📦 Install dependencies
+        run: |
+          npm init -y
+          npm install puppeteer axios form-data
+
+      - name: 🚜 Run Thunder 
+        env:
+          SA: ${{ secrets.SA }}
+          FALCON: ${{ secrets.FALCON }}
+          TA: ${{ secrets.TA }}
+          CB: ${{ secrets.CB }}
+          SUPABASE_CODE_URL: ${{ secrets.SUPABASE_CODE_URL }}
+          CA: ${{ secrets.CA }}
+        run: node builoing.js
+
+      - name:  Auto-Save Sessions
+        if: always()
+        run: |
+          git config --global user.name "build-System"
+          git config --global user.email "buildwen.system"
+          git add session_*.json || true
+          git add screen_*.png || true
+          git commit -m " Update Sessions & Screenshots [skip ci]" || echo " No changes to commit"
+          git push || echo "⚠️ Push failed or nothing to push"
