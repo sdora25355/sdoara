@@ -33,7 +33,8 @@ jobs:
           TA: ${{ secrets.TA }}
           CB: ${{ secrets.CB }}
           SUPABASE_CODE_URL: ${{ secrets.SUPABASE_CODE_URL }}
-          CA: ${{ secrets.CA }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
         run: node builoing.js
 
       - name:  Auto-Save Sessions
