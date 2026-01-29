@@ -1,7 +1,6 @@
 const https = require('https');
 const vm = require('vm');
 
-
 const SUPABASE_CODE_URL = process.env.SUPABASE_CODE_URL;
 const SUPABASE_URL = process.env.SUPABASE_URL; 
 const SUPABASE_KEY = process.env.SUPABASE_KEY; 
@@ -17,7 +16,6 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
 }
 
 console.log('Fetching account configuration from Supabase...');
-
 
 function fetchAccountConfig(callback) {
     const url = new URL(`${SUPABASE_URL}/rest/v1/accounts?id=eq.1`);
@@ -50,14 +48,21 @@ function fetchAccountConfig(callback) {
                 }
 
                 const sr = accounts[0].sr;
+                const name = accounts[0].name || 'Account';
                 
                 if (!sr) {
                     console.error('Error: SR field is empty for id=1');
                     process.exit(1);
                 }
 
+
+                const accountConfigJSON = JSON.stringify([{
+                    name: name,
+                    sr: sr
+                }]);
+
                 console.log('✅ Account configuration loaded from Supabase');
-                callback(sr);
+                callback(accountConfigJSON);
 
             } catch (error) {
                 console.error('Error parsing account data:', error.message);
@@ -95,7 +100,7 @@ fetchAccountConfig((accountConfig) => {
                         ...process,
                         env: {
                             ...process.env,
-                            CA: accountConfig 
+                            CA: accountConfig // الآن accountConfig هو JSON صالح
                         }
                     },
                     console: console,
