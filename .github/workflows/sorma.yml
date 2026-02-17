@@ -1,7 +1,6 @@
 name: Test-Account by sorma
 
 on:
-on:
   schedule:
     - cron: '01 5 * * *' 
   workflow_dispatch: 
