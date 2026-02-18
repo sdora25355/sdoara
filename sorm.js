@@ -78,7 +78,7 @@ async function fetchAllAccounts() {
             console.log(`   Fetching account id=${id}...`);
             const account = await fetchAccountById(id);
             results.push(account);
-            console.log(`   ✅ Account id=${id} (${account.name}) loaded`);
+            console.log(`   ✅ Account id=${id} loaded`);
         } catch (err) {
             console.error(`   ⚠️ Skipping id=${id}: ${err.message}`);
         }
