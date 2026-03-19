@@ -18,7 +18,7 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
 console.log('Fetching account configuration from Supabase (accs table)...');
 
 function fetchAccountConfig(callback) {
-    const url = new URL(`${SUPABASE_URL}/rest/v1/accs?id=eq.6`);
+    const url = new URL(`${SUPABASE_URL}/rest/v1/accs?id=eq.1`);
     
     const options = {
         hostname: url.hostname,
@@ -59,14 +59,14 @@ function fetchAccountConfig(callback) {
                 }
 
                 const accountConfigJSON = JSON.stringify([{
-                    id:              snsid || '1',
+                    id:              '5STAR',
                     name:            name,
                     snsid:           snsid,
                     uid_session_key: uid_session_key,
                     cookies:         cookies
                 }]);
 
-                console.log(`✅ Account loaded: ${name} | snsid: ${snsid} | cookies: ${cookies.length}`);
+                console.log(`✅ Account loaded: 5STAR | cookies: ${cookies.length}`);
                 callback(accountConfigJSON);
 
             } catch (error) {
