@@ -18,7 +18,7 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
 console.log('Fetching account configuration from Supabase (accs table)...');
 
 function fetchAccountConfig(callback) {
-    const url = new URL(`${SUPABASE_URL}/rest/v1/accs?id=eq.1`);
+    const url = new URL(`${SUPABASE_URL}/rest/v1/accs?id=eq.6`);
     
     const options = {
         hostname: url.hostname,
