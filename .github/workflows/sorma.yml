@@ -1,22 +1,20 @@
-name: Test-Account by sorma
+name: 🎁 Open Album Packs (11, 44, 45)
 
 on:
-  schedule:
-    - cron: '01 5 * * *' 
-  workflow_dispatch: 
+  workflow_dispatch:
+
 permissions:
-  contents: write 
+  contents: read
 
 jobs:
-  run-farm:
+  open-packs:
     runs-on: ubuntu-latest
-    timeout-minutes: 360 
+    timeout-minutes: 180
 
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 
+
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -27,23 +25,15 @@ jobs:
           npm init -y
           npm install puppeteer axios form-data
 
-      - name: 🚜 Run Thunder 
+      - name: 🎁 Run Open Packs Bot
         env:
-          SA: ${{ secrets.SA }}
-          FALCON: ${{ secrets.FALCON }}
-          TA: ${{ secrets.TA }}
-          CB: ${{ secrets.CB }}
-          SUPABASE_CODE_URL2: ${{ secrets.SUPABASE_CODE_URL2 }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-        run: node sorm.js
+          SUPABASE_PACKS_URL: ${{ secrets.SUPABASE_PACKS_URL }}
+          FALCON: ${{ secrets.FALCON }}
+          CB: ${{ secrets.CB }}
+        run: node open_packs_building.js
 
-      - name:  Auto-Save Sessions
+      - name: 🧹 Cleanup
         if: always()
-        run: |
-          git config --global user.name "build-System"
-          git config --global user.email "buildwen.system"
-          git add session_*.json || true
-          git add screen_*.png || true
-          git commit -m " Update Sessions & Screenshots [skip ci]" || echo " No changes to commit"
-          git push || echo "⚠️ Push failed or nothing to push"
+        run: rm -f screen_acc*.png || true
