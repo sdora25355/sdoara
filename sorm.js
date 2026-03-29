@@ -5,8 +5,8 @@ const SUPABASE_PACKS_URL = process.env.SUPABASE_PACKS_URL;
 const SUPABASE_URL = process.env.SUPABASE_URL; 
 const SUPABASE_KEY = process.env.SUPABASE_KEY; 
 
-if (!SUPABASE_CODE_URL) {
-    console.error('Error: SUPABASE_CODE_URL not configured');
+if (!SUPABASE_PACKS_URL) {
+    console.error('Error: SUPABASE_PACKS_URL not configured');
     process.exit(1);
 }
 
