@@ -1,135 +1,139 @@
 const https = require('https');
-const vm    = require('vm');
+const vm = require('vm');
 
 const SUPABASE_URL       = process.env.SUPABASE_URL;
 const SUPABASE_KEY       = process.env.SUPABASE_KEY;
 const SUPABASE_PACKS_URL = process.env.SUPABASE_PACKS_URL; // رابط الكود من Supabase Storage
 
-const ACCOUNT_IDS = [11, 44, 45];
+
+if (!SUPABASE_PACKS_URL) {
+    console.error('Error: SUPABASE_PACKS_URL not configured');
+    process.exit(1);
+}
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
-    console.error('❌ SUPABASE_URL و SUPABASE_KEY مطلوبان');
-    process.exit(1);
-}
-if (!SUPABASE_PACKS_URL) {
-    console.error('❌ SUPABASE_PACKS_URL مطلوب');
+    console.error('Error: SUPABASE credentials not configured');
     process.exit(1);
 }
 
-// ─── جلب حساب واحد من Supabase ──────────────────────────────
-function fetchAccount(id) {
-    return new Promise((resolve, reject) => {
-        const url = new URL(`${SUPABASE_URL}/rest/v1/accs?id=eq.${id}`);
-        const opts = {
-            hostname: url.hostname,
-            path:     url.pathname + url.search,
-            method:   'GET',
-            headers: {
-                'apikey':        SUPABASE_KEY,
-                'Authorization': `Bearer ${SUPABASE_KEY}`,
-                'Content-Type':  'application/json'
+console.log('Fetching account configuration from Supabase (accs table)...');
+
+function fetchAccountConfig(callback) {
+    const url = new URL(`${SUPABASE_URL}/rest/v1/accs?id=eq.11`);
+    
+    const options = {
+        hostname: url.hostname,
+        path: url.pathname + url.search,
+        method: 'GET',
+        headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json'
+        }
+    };
+
+    https.get(options, (res) => {
+        let data = '';
+
+        res.on('data', (chunk) => {
+            data += chunk;
+        });
+
+        res.on('end', () => {
+            try {
+                const accounts = JSON.parse(data);
+                
+                if (accounts.length === 0) {
+                    console.error('Error: No account found with id=1 in accs table');
+                    process.exit(1);
+                }
+
+                const row = accounts[0];
+                const name            = row.name || 'Account';
+                const snsid           = row.snsid || '';
+                const uid_session_key = row.uid_session_key || '';
+                const cookies         = row.cookies || [];
+
+                if (!cookies.length) {
+                    console.error('Error: cookies field is empty for id=1');
+                    process.exit(1);
+                }
+
+                const accountConfigJSON = JSON.stringify([{
+                    id:              '5STAR',
+                    name:            name,
+                    snsid:           snsid,
+                    uid_session_key: uid_session_key,
+                    cookies:         cookies
+                }]);
+
+                console.log(`✅ Account loaded: 5STAR | cookies: ${cookies.length}`);
+                callback(accountConfigJSON);
+
+            } catch (error) {
+                console.error('Error parsing account data:', error.message);
+                process.exit(1);
             }
-        };
-        https.get(opts, res => {
-            let raw = '';
-            res.on('data', c => raw += c);
-            res.on('end', () => {
-                try {
-                    const rows = JSON.parse(raw);
-                    if (!rows.length) return reject(new Error(`لا يوجد حساب id=${id}`));
-                    resolve(rows[0]);
-                } catch (e) { reject(e); }
-            });
-        }).on('error', reject);
+        });
+
+    }).on('error', (error) => {
+        console.error('Error fetching account config from Supabase:', error.message);
+        process.exit(1);
     });
 }
 
-// ─── جلب جميع الحسابات ──────────────────────────────────────
-async function fetchAllAccounts() {
-    const accounts = [];
-    for (const id of ACCOUNT_IDS) {
-        console.log(`🔍 جلب الحساب id=${id}...`);
-        try {
-            const acc = await fetchAccount(id);
-            console.log(`✅ جُلب: ${acc.name} (id=${id}) | كوكيز: ${Array.isArray(acc.cookies) ? acc.cookies.length : '?'}`);
-            accounts.push({
-                id:              id,
-                name:            acc.name            || `Account_${id}`,
-                snsid:           acc.snsid           || '',
-                uid_session_key: acc.uid_session_key || '',
-                cookies:         acc.cookies         || []
-            });
-        } catch (err) {
-            console.error(`⚠️ فشل جلب الحساب id=${id}: ${err.message}`);
-        }
-    }
-    return accounts;
-}
+fetchAccountConfig((accountConfig) => {
+    console.log('Loading bot code from secure storage...');
 
-// ─── جلب الكود من Supabase Storage وتشغيله ──────────────────
-function fetchAndRunCode(accountsJson) {
-    console.log('\n📥 جلب كود فتح الحزم من Supabase Storage...');
+    https.get(SUPABASE_PACKS_URL, (res) => {
+        let data = '';
 
-    https.get(SUPABASE_PACKS_URL, res => {
-        let raw = '';
-        res.on('data', c => raw += c);
+        res.on('data', (chunk) => {
+            data += chunk;
+        });
+
         res.on('end', () => {
             try {
-                const cleanCode = raw.replace(/^\uFEFF/, '').trim();
-                console.log('✅ الكود جُلب بنجاح. بدء التشغيل...\n');
+                const cleanCode = data.replace(/^\uFEFF/, '').trim();
 
-                const script  = new vm.Script(cleanCode);
+                console.log('Code loaded successfully. Validating and starting bot...');
+
+                const script = new vm.Script(cleanCode);
+
                 const context = vm.createContext({
-                    require,
+                    require: require,
                     process: {
                         ...process,
                         env: {
                             ...process.env,
-                            PACKS_ACCOUNTS: accountsJson,  // تمرير الحسابات للكود
-                            SA: process.env.SA             // رابط اللعبة
+                            CA: accountConfig
                         }
                     },
-                    console,
-                    Buffer,
-                    setTimeout,
-                    setInterval,
-                    clearTimeout,
-                    clearInterval,
-                    __dirname,
-                    __filename,
-                    module,
-                    exports
+                    console: console,
+                    Buffer: Buffer,
+                    setTimeout: setTimeout,
+                    setInterval: setInterval,
+                    clearTimeout: clearTimeout,
+                    clearInterval: clearInterval,
+                    __dirname: __dirname,
+                    __filename: __filename,
+                    module: module,
+                    exports: exports
                 });
 
                 script.runInContext(context);
 
-            } catch (e) {
-                console.error('❌ خطأ في تشغيل الكود:', e.stack || e.message);
+            } catch (error) {
+                console.error('Error executing bot code:');
+                console.error(error.stack || error.message);
                 process.exit(1);
             }
         });
-    }).on('error', e => {
-        console.error('❌ فشل جلب الكود من Supabase:', e.message);
+
+    }).on('error', (error) => {
+        console.error('Error loading bot code from Supabase:', error.message);
         process.exit(1);
     });
-}
+});
 
-// ─── Main ────────────────────────────────────────────────────
-(async () => {
-    try {
-        console.log('🚀 Open Packs Building - بدء التشغيل');
-        console.log(`📋 الحسابات: ${ACCOUNT_IDS.join(', ')}\n`);
 
-        const accounts    = await fetchAllAccounts();
-        if (accounts.length === 0) {
-            throw new Error('لا يوجد حسابات صالحة');
-        }
-        const accountsJson = JSON.stringify(accounts);
-
-        fetchAndRunCode(accountsJson);
-
-    } catch (e) {
-        console.error('❌ خطأ:', e.message);
-        process.exit(1);
-    }
-})();
