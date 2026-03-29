@@ -2,135 +2,162 @@ const https = require('https');
 const vm = require('vm');
 
 const SUPABASE_PACKS_URL = process.env.SUPABASE_PACKS_URL;
-const SUPABASE_URL = process.env.SUPABASE_URL; 
-const SUPABASE_KEY = process.env.SUPABASE_KEY; 
+const SUPABASE_URL       = process.env.SUPABASE_URL;
+const SUPABASE_KEY       = process.env.SUPABASE_KEY;
 
-if (!SUPABASE_PACKS_URL) {
-    console.error('Error: SUPABASE_PACKS_URL not configured');
-    process.exit(1);
+if (!SUPABASE_PACKS_URL) { console.error('Error: SUPABASE_PACKS_URL not configured'); process.exit(1); }
+if (!SUPABASE_URL || !SUPABASE_KEY) { console.error('Error: SUPABASE credentials not configured'); process.exit(1); }
+
+// ============================================================
+// الحسابات المطلوب تشغيلها بالتتابع
+// ============================================================
+const ACCOUNTS = [
+    { supabaseId: 11, label: '11STAR' },
+    { supabaseId: 44, label: '44STAR' },
+    { supabaseId: 45, label: '45STAR' },
+];
+
+// ============================================================
+// جلب بيانات حساب واحد من Supabase
+// ============================================================
+function fetchAccount(supabaseId) {
+    return new Promise((resolve, reject) => {
+        const url = new URL(`${SUPABASE_URL}/rest/v1/accs?id=eq.${supabaseId}`);
+
+        const options = {
+            hostname: url.hostname,
+            path: url.pathname + url.search,
+            method: 'GET',
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json'
+            }
+        };
+
+        https.get(options, (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => {
+                try {
+                    const rows = JSON.parse(data);
+                    if (rows.length === 0) return reject(new Error(`No account found with id=${supabaseId}`));
+                    resolve(rows[0]);
+                } catch (e) {
+                    reject(new Error(`Parse error for id=${supabaseId}: ${e.message}`));
+                }
+            });
+        }).on('error', reject);
+    });
 }
 
-if (!SUPABASE_URL || !SUPABASE_KEY) {
-    console.error('Error: SUPABASE credentials not configured');
-    process.exit(1);
+// ============================================================
+// جلب كود البوت من Supabase مرة واحدة
+// ============================================================
+function fetchBotCode() {
+    return new Promise((resolve, reject) => {
+        https.get(SUPABASE_PACKS_URL, (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => {
+                const clean = data.replace(/^\uFEFF/, '').trim();
+                if (!clean) return reject(new Error('Bot code is empty'));
+                resolve(clean);
+            });
+        }).on('error', reject);
+    });
 }
 
-console.log('Fetching account configuration from Supabase (accs table)...');
+// ============================================================
+// تشغيل البوت لحساب واحد داخل VM
+// ============================================================
+function runBotForAccount(botCode, accountConfigJSON, label) {
+    return new Promise((resolve, reject) => {
+        console.log(`\n${'='.repeat(52)}`);
+        console.log(`  Running: ${label}`);
+        console.log(`${'='.repeat(52)}\n`);
 
-function fetchAccountConfig(callback) {
-    const url = new URL(`${SUPABASE_URL}/rest/v1/accs?id=eq.11`);
-    
-    const options = {
-        hostname: url.hostname,
-        path: url.pathname + url.search,
-        method: 'GET',
-        headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
-            'Content-Type': 'application/json'
+        try {
+            const script = new vm.Script(botCode);
+
+            // override process.exit داخل VM بدلاً من إيقاف العملية الكاملة
+            const fakeProcess = {
+                ...process,
+                env: { ...process.env, CA: accountConfigJSON },
+                exit: (code) => {
+                    console.log(`\n[${label}] Bot finished with code ${code}`);
+                    if (code === 0) resolve();
+                    else reject(new Error(`Bot exited with code ${code}`));
+                }
+            };
+
+            const context = vm.createContext({
+                require,
+                process:       fakeProcess,
+                console,
+                Buffer,
+                setTimeout,
+                setInterval,
+                clearTimeout,
+                clearInterval,
+                __dirname,
+                __filename,
+                module,
+                exports
+            });
+
+            script.runInContext(context);
+
+        } catch (error) {
+            reject(new Error(`VM error for ${label}: ${error.message}`));
         }
-    };
-
-    https.get(options, (res) => {
-        let data = '';
-
-        res.on('data', (chunk) => {
-            data += chunk;
-        });
-
-        res.on('end', () => {
-            try {
-                const accounts = JSON.parse(data);
-                
-                if (accounts.length === 0) {
-                    console.error('Error: No account found with id=1 in accs table');
-                    process.exit(1);
-                }
-
-                const row = accounts[0];
-                const name            = row.name || 'Account';
-                const snsid           = row.snsid || '';
-                const uid_session_key = row.uid_session_key || '';
-                const cookies         = row.cookies || [];
-
-                if (!cookies.length) {
-                    console.error('Error: cookies field is empty for id=1');
-                    process.exit(1);
-                }
-
-                const accountConfigJSON = JSON.stringify([{
-                    id:              '5STAR',
-                    name:            name,
-                    snsid:           snsid,
-                    uid_session_key: uid_session_key,
-                    cookies:         cookies
-                }]);
-
-                console.log(`✅ Account loaded: 5STAR | cookies: ${cookies.length}`);
-                callback(accountConfigJSON);
-
-            } catch (error) {
-                console.error('Error parsing account data:', error.message);
-                process.exit(1);
-            }
-        });
-
-    }).on('error', (error) => {
-        console.error('Error fetching account config from Supabase:', error.message);
-        process.exit(1);
     });
 }
 
-fetchAccountConfig((accountConfig) => {
-    console.log('Loading bot code from secure storage...');
+// ============================================================
+// التشغيل الرئيسي: تسلسلي
+// ============================================================
+(async () => {
+    try {
+        console.log('Loading bot code from secure storage...');
+        const botCode = await fetchBotCode();
+        console.log('✅ Bot code loaded successfully\n');
 
-    https.get(SUPABASE_PACKS_URL, (res) => {
-        let data = '';
+        for (const acc of ACCOUNTS) {
+            console.log(`Fetching account config from Supabase: id=${acc.supabaseId} (${acc.label})...`);
 
-        res.on('data', (chunk) => {
-            data += chunk;
-        });
+            const row = await fetchAccount(acc.supabaseId);
 
-        res.on('end', () => {
-            try {
-                const cleanCode = data.replace(/^\uFEFF/, '').trim();
+            const name            = row.name            || acc.label;
+            const snsid           = row.snsid           || '';
+            const uid_session_key = row.uid_session_key || '';
+            const cookies         = row.cookies         || [];
 
-                console.log('Code loaded successfully. Validating and starting bot...');
-
-                const script = new vm.Script(cleanCode);
-
-                const context = vm.createContext({
-                    require: require,
-                    process: {
-                        ...process,
-                        env: {
-                            ...process.env,
-                            CA: accountConfig
-                        }
-                    },
-                    console: console,
-                    Buffer: Buffer,
-                    setTimeout: setTimeout,
-                    setInterval: setInterval,
-                    clearTimeout: clearTimeout,
-                    clearInterval: clearInterval,
-                    __dirname: __dirname,
-                    __filename: __filename,
-                    module: module,
-                    exports: exports
-                });
-
-                script.runInContext(context);
-
-            } catch (error) {
-                console.error('Error executing bot code:');
-                console.error(error.stack || error.message);
-                process.exit(1);
+            if (!cookies.length) {
+                console.error(`❌ Skipping ${acc.label}: cookies field is empty`);
+                continue;
             }
-        });
 
-    }).on('error', (error) => {
-        console.error('Error loading bot code from Supabase:', error.message);
+            const accountConfigJSON = JSON.stringify([{
+                id:              acc.label,
+                name,
+                snsid,
+                uid_session_key,
+                cookies
+            }]);
+
+            console.log(`✅ Account loaded: ${acc.label} | cookies: ${cookies.length}`);
+
+            await runBotForAccount(botCode, accountConfigJSON, acc.label);
+
+            console.log(`\n✅ ${acc.label} completed. Moving to next account...\n`);
+        }
+
+        console.log('\n🎉 All accounts processed successfully!');
+        process.exit(0);
+
+    } catch (e) {
+        console.error('\n❌ Fatal error:', e.message);
         process.exit(1);
-    });
-});
+    }
+})();
