@@ -33,8 +33,11 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
           SUPABASE_PACKS_URL: ${{ secrets.SUPABASE_PACKS_URL }}
+          SA: ${{ secrets.SA }}
           FALCON: ${{ secrets.FALCON }}
+          TA: ${{ secrets.TA }}
           CB: ${{ secrets.CB }}
+          
         run: node sorm.js
 
       - name: 🧹 Cleanup
