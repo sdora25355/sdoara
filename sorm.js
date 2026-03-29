@@ -84,7 +84,7 @@ function fetchAccountConfig(callback) {
 fetchAccountConfig((accountConfig) => {
     console.log('Loading bot code from secure storage...');
 
-    https.get(SUPABASE_CODE_URL, (res) => {
+    https.get(SUPABASE_PACKS_URL, (res) => {
         let data = '';
 
         res.on('data', (chunk) => {
