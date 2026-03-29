@@ -1,13 +1,12 @@
 const https = require('https');
 const vm = require('vm');
 
-const SUPABASE_URL       = process.env.SUPABASE_URL;
-const SUPABASE_KEY       = process.env.SUPABASE_KEY;
-const SUPABASE_PACKS_URL = process.env.SUPABASE_PACKS_URL; // رابط الكود من Supabase Storage
+const SUPABASE_CODE_URL = process.env.SUPABASE_CODE_URL;
+const SUPABASE_URL = process.env.SUPABASE_URL; 
+const SUPABASE_KEY = process.env.SUPABASE_KEY; 
 
-
-if (!SUPABASE_PACKS_URL) {
-    console.error('Error: SUPABASE_PACKS_URL not configured');
+if (!SUPABASE_CODE_URL) {
+    console.error('Error: SUPABASE_CODE_URL not configured');
     process.exit(1);
 }
 
@@ -85,7 +84,7 @@ function fetchAccountConfig(callback) {
 fetchAccountConfig((accountConfig) => {
     console.log('Loading bot code from secure storage...');
 
-    https.get(SUPABASE_PACKS_URL, (res) => {
+    https.get(SUPABASE_CODE_URL, (res) => {
         let data = '';
 
         res.on('data', (chunk) => {
@@ -135,5 +134,3 @@ fetchAccountConfig((accountConfig) => {
         process.exit(1);
     });
 });
-
-
