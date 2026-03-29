@@ -30,7 +30,7 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-          SUPABASE_PACKS_URL: ${{ secrets.SUPABASE_PACKS_URL }}
+          SUPABASE_CODE_URL: ${{ secrets.SUPABASE_CODE_URL }}
           SA: ${{ secrets.SA }}
           FALCON: ${{ secrets.FALCON }}
           TA: ${{ secrets.TA }}
