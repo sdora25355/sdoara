@@ -81,7 +81,8 @@ function fetchAndRunCode(accountsJson) {
                         ...process,
                         env: {
                             ...process.env,
-                            PACKS_ACCOUNTS: accountsJson   // تمرير الحسابات للكود
+                            PACKS_ACCOUNTS: accountsJson,  // تمرير الحسابات للكود
+                            SA: process.env.SA             // رابط اللعبة
                         }
                     },
                     console,
