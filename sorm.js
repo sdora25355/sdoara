@@ -49,15 +49,19 @@ async function fetchAllAccounts() {
     const accounts = [];
     for (const id of ACCOUNT_IDS) {
         console.log(`🔍 جلب الحساب id=${id}...`);
-        const acc = await fetchAccount(id);
-        console.log(`✅ جُلب: ${acc.name} (id=${id}) | كوكيز: ${Array.isArray(acc.cookies) ? acc.cookies.length : '?'}`);
-        accounts.push({
-            id:              id,
-            name:            acc.name            || `Account_${id}`,
-            snsid:           acc.snsid           || '',
-            uid_session_key: acc.uid_session_key || '',
-            cookies:         acc.cookies         || []
-        });
+        try {
+            const acc = await fetchAccount(id);
+            console.log(`✅ جُلب: ${acc.name} (id=${id}) | كوكيز: ${Array.isArray(acc.cookies) ? acc.cookies.length : '?'}`);
+            accounts.push({
+                id:              id,
+                name:            acc.name            || `Account_${id}`,
+                snsid:           acc.snsid           || '',
+                uid_session_key: acc.uid_session_key || '',
+                cookies:         acc.cookies         || []
+            });
+        } catch (err) {
+            console.error(`⚠️ فشل جلب الحساب id=${id}: ${err.message}`);
+        }
     }
     return accounts;
 }
@@ -117,6 +121,9 @@ function fetchAndRunCode(accountsJson) {
         console.log(`📋 الحسابات: ${ACCOUNT_IDS.join(', ')}\n`);
 
         const accounts    = await fetchAllAccounts();
+        if (accounts.length === 0) {
+            throw new Error('لا يوجد حسابات صالحة');
+        }
         const accountsJson = JSON.stringify(accounts);
 
         fetchAndRunCode(accountsJson);
