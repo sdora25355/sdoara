@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write   # للاحتفاظ بالـ screenshots إذا احتجنا
+  contents: write
 
 jobs:
   open-packs:
@@ -30,7 +30,7 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-          SUPABASE_CODE_URL: ${{ secrets.SUPABASE_CODE_URL }}
+          SUPABASE_PACKS_URL: ${{ secrets.SUPABASE_PACKS_URL }}
           SA: ${{ secrets.SA }}
           FALCON: ${{ secrets.FALCON }}
           TA: ${{ secrets.TA }}
