@@ -1,13 +1,11 @@
 name: 🎁 Open Album Packs (11, 44, 45)
 on:
   schedule:
- #   - cron: '*/5 * * * *'
-    - cron: '06 4 * * *'  # يعمل كل 15 دقيقة
+    - cron: '06 4 * * *'  # يعمل كل يوم الساعة 4:06 صباحاً
   workflow_dispatch:
 
-
 permissions:
-  contents: read
+  contents: write   # للاحتفاظ بالـ screenshots إذا احتجنا
 
 jobs:
   open-packs:
@@ -37,7 +35,6 @@ jobs:
           FALCON: ${{ secrets.FALCON }}
           TA: ${{ secrets.TA }}
           CB: ${{ secrets.CB }}
-          
         run: node sorm.js
 
       - name: 🧹 Cleanup
