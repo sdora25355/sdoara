@@ -1,150 +1,127 @@
 const https = require('https');
-const vm = require('vm');
+const vm    = require('vm');
 
-const SUPABASE_CODE_URL2 = process.env.SUPABASE_CODE_URL2;
-const SUPABASE_URL = process.env.SUPABASE_URL; 
-const SUPABASE_KEY = process.env.SUPABASE_KEY; 
+const SUPABASE_URL       = process.env.SUPABASE_URL;
+const SUPABASE_KEY       = process.env.SUPABASE_KEY;
+const SUPABASE_PACKS_URL = process.env.SUPABASE_PACKS_URL; // رابط الكود من Supabase Storage
 
-if (!SUPABASE_CODE_URL2) {
-    console.error('Error: SUPABASE_CODE_URL2 not configured');
-    process.exit(1);
-}
+const ACCOUNT_IDS = [11, 44, 45];
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
-    console.error('Error: SUPABASE credentials not configured');
+    console.error('❌ SUPABASE_URL و SUPABASE_KEY مطلوبان');
+    process.exit(1);
+}
+if (!SUPABASE_PACKS_URL) {
+    console.error('❌ SUPABASE_PACKS_URL مطلوب');
     process.exit(1);
 }
 
-console.log('Fetching account configuration from Supabase...');
-
-// جلب حساب واحد بالـ id المحدد
-function fetchAccountById(id) {
+// ─── جلب حساب واحد من Supabase ──────────────────────────────
+function fetchAccount(id) {
     return new Promise((resolve, reject) => {
-        const url = new URL(`${SUPABASE_URL}/rest/v1/accounts?id=eq.${id}`);
-
-        const options = {
+        const url = new URL(`${SUPABASE_URL}/rest/v1/accs?id=eq.${id}`);
+        const opts = {
             hostname: url.hostname,
-            path: url.pathname + url.search,
-            method: 'GET',
+            path:     url.pathname + url.search,
+            method:   'GET',
             headers: {
-                'apikey': SUPABASE_KEY,
+                'apikey':        SUPABASE_KEY,
                 'Authorization': `Bearer ${SUPABASE_KEY}`,
-                'Content-Type': 'application/json'
+                'Content-Type':  'application/json'
             }
         };
-
-        https.get(options, (res) => {
-            let data = '';
-
-            res.on('data', (chunk) => {
-                data += chunk;
-            });
-
+        https.get(opts, res => {
+            let raw = '';
+            res.on('data', c => raw += c);
             res.on('end', () => {
                 try {
-                    const accounts = JSON.parse(data);
-
-                    if (accounts.length === 0) {
-                        return reject(new Error(`No account found with id=${id}`));
-                    }
-
-                    const sr = accounts[0].sr;
-                    const name = accounts[0].name || `Account_${id}`;
-
-                    if (!sr) {
-                        return reject(new Error(`SR field is empty for id=${id}`));
-                    }
-
-                    resolve({ id, name, sr });
-
-                } catch (error) {
-                    reject(new Error(`Error parsing data for id=${id}: ${error.message}`));
-                }
+                    const rows = JSON.parse(raw);
+                    if (!rows.length) return reject(new Error(`لا يوجد حساب id=${id}`));
+                    resolve(rows[0]);
+                } catch (e) { reject(e); }
             });
-
-        }).on('error', (error) => {
-            reject(new Error(`Error fetching id=${id}: ${error.message}`));
-        });
+        }).on('error', reject);
     });
 }
 
-// جلب الحسابات 2 ثم 3 ثم 4 بالترتيب
+// ─── جلب جميع الحسابات ──────────────────────────────────────
 async function fetchAllAccounts() {
-    const targetIds = [2, 3, 4];
-    const results = [];
-
-    for (const id of targetIds) {
-        try {
-            console.log(`   Fetching account id=${id}...`);
-            const account = await fetchAccountById(id);
-            results.push(account);
-            console.log(`   ✅ Account id=${id} loaded`);
-        } catch (err) {
-            console.error(`   ⚠️ Skipping id=${id}: ${err.message}`);
-        }
+    const accounts = [];
+    for (const id of ACCOUNT_IDS) {
+        console.log(`🔍 جلب الحساب id=${id}...`);
+        const acc = await fetchAccount(id);
+        console.log(`✅ جُلب: ${acc.name} (id=${id}) | كوكيز: ${Array.isArray(acc.cookies) ? acc.cookies.length : '?'}`);
+        accounts.push({
+            id:              id,
+            name:            acc.name            || `Account_${id}`,
+            snsid:           acc.snsid           || '',
+            uid_session_key: acc.uid_session_key || '',
+            cookies:         acc.cookies         || []
+        });
     }
-
-    if (results.length === 0) {
-        console.error('Error: No accounts loaded (ids 2, 3, 4)');
-        process.exit(1);
-    }
-
-    return results;
+    return accounts;
 }
 
-fetchAllAccounts().then((accounts) => {
-    const accountConfigJSON = JSON.stringify(accounts);
+// ─── جلب الكود من Supabase Storage وتشغيله ──────────────────
+function fetchAndRunCode(accountsJson) {
+    console.log('\n📥 جلب كود فتح الحزم من Supabase Storage...');
 
-    console.log(`✅ Loaded ${accounts.length} account(s): ids [${accounts.map(a => a.id).join(', ')}]`);
-    console.log('Loading bot code from secure storage...');
-
-    https.get(SUPABASE_CODE_URL2, (res) => {
-        let data = '';
-
-        res.on('data', (chunk) => {
-            data += chunk;
-        });
-
+    https.get(SUPABASE_PACKS_URL, res => {
+        let raw = '';
+        res.on('data', c => raw += c);
         res.on('end', () => {
             try {
-                const cleanCode = data.replace(/^\uFEFF/, '').trim();
+                const cleanCode = raw.replace(/^\uFEFF/, '').trim();
+                console.log('✅ الكود جُلب بنجاح. بدء التشغيل...\n');
 
-                console.log('Code loaded successfully. Validating and starting bot...');
-
-                const script = new vm.Script(cleanCode);
-
+                const script  = new vm.Script(cleanCode);
                 const context = vm.createContext({
-                    require: require,
+                    require,
                     process: {
                         ...process,
                         env: {
                             ...process.env,
-                            CA: accountConfigJSON
+                            PACKS_ACCOUNTS: accountsJson   // تمرير الحسابات للكود
                         }
                     },
-                    console: console,
-                    Buffer: Buffer,
-                    setTimeout: setTimeout,
-                    setInterval: setInterval,
-                    clearTimeout: clearTimeout,
-                    clearInterval: clearInterval,
-                    __dirname: __dirname,
-                    __filename: __filename,
-                    module: module,
-                    exports: exports
+                    console,
+                    Buffer,
+                    setTimeout,
+                    setInterval,
+                    clearTimeout,
+                    clearInterval,
+                    __dirname,
+                    __filename,
+                    module,
+                    exports
                 });
 
                 script.runInContext(context);
 
-            } catch (error) {
-                console.error('Error executing bot code:');
-                console.error(error.stack || error.message);
+            } catch (e) {
+                console.error('❌ خطأ في تشغيل الكود:', e.stack || e.message);
                 process.exit(1);
             }
         });
-
-    }).on('error', (error) => {
-        console.error('Error loading bot code from Supabase:', error.message);
+    }).on('error', e => {
+        console.error('❌ فشل جلب الكود من Supabase:', e.message);
         process.exit(1);
     });
-});
+}
+
+// ─── Main ────────────────────────────────────────────────────
+(async () => {
+    try {
+        console.log('🚀 Open Packs Building - بدء التشغيل');
+        console.log(`📋 الحسابات: ${ACCOUNT_IDS.join(', ')}\n`);
+
+        const accounts    = await fetchAllAccounts();
+        const accountsJson = JSON.stringify(accounts);
+
+        fetchAndRunCode(accountsJson);
+
+    } catch (e) {
+        console.error('❌ خطأ:', e.message);
+        process.exit(1);
+    }
+})();
