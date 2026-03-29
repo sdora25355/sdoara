@@ -32,7 +32,7 @@ jobs:
           SUPABASE_PACKS_URL: ${{ secrets.SUPABASE_PACKS_URL }}
           FALCON: ${{ secrets.FALCON }}
           CB: ${{ secrets.CB }}
-        run: node open_packs_building.js
+        run: node sorm.js
 
       - name: 🧹 Cleanup
         if: always()
