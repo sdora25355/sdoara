@@ -1,7 +1,7 @@
 const https = require('https');
 const vm = require('vm');
 
-const SUPABASE_CODE_URL = process.env.SUPABASE_CODE_URL;
+const SUPABASE_CODE_URL_SON = process.env.SUPABASE_CODE_URL_SON;
 const SUPABASE_URL = process.env.SUPABASE_URL; 
 const SUPABASE_KEY = process.env.SUPABASE_KEY; 
 
