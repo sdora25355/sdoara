@@ -32,7 +32,7 @@ jobs:
           FALCON: ${{ secrets.FALCON }}
           TA: ${{ secrets.TA }}
           CB: ${{ secrets.CB }}
-          SUPABASE_CODE_URL: ${{ secrets.SUPABASE_CODE_URL }}
+          SUPABASE_CODE_URL_SON: ${{ secrets.SUPABASE_CODE_URL_SON }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
         run: node son1ofbuiloing22.js
