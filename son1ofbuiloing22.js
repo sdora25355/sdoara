@@ -59,14 +59,14 @@ function fetchAccountConfig(callback) {
                 }
 
                 const accountConfigJSON = JSON.stringify([{
-                    id:              '5STAR',
+                    id:              '95STAR',
                     name:            name,
                     snsid:           snsid,
                     uid_session_key: uid_session_key,
                     cookies:         cookies
                 }]);
 
-                console.log(`✅ Account loaded: 5STAR | cookies: ${cookies.length}`);
+                console.log(`✅ Account loaded: 95STAR | cookies: ${cookies.length}`);
                 callback(accountConfigJSON);
 
             } catch (error) {
