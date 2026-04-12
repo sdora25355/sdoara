@@ -15,6 +15,7 @@ const ACCOUNTS = [
     { supabaseId: 11, label: '11STAR' },
     { supabaseId: 44, label: '44STAR' },
     { supabaseId: 45, label: '45STAR' },
+    { supabaseId: 95, label: '95STAR' },
 ];
 
 // ============================================================
