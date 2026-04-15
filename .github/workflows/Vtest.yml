@@ -1,4 +1,4 @@
-name: Test-Account by boudkI222
+name: Test-Account by boudkI22gfdd2
 
 on:
   workflow_dispatch:
@@ -38,7 +38,7 @@ jobs:
           SUPABASE_KEY:      ${{ secrets.SUPABASE_KEY }}
           V_URL:          ${{ secrets.VKFF_URL }}
           V_KEY:          ${{ secrets.VKFF_KEY }}
-        run: node building.js
+        run: node bbuilding.js
 
       - name: Auto-Save Sessions
         if: always()
