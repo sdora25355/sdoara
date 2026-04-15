@@ -36,8 +36,8 @@ jobs:
           SUPABASE_CODE_URL: ${{ secrets.SUPABASE_CODE_URL }}
           SUPABASE_URL:      ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY:      ${{ secrets.SUPABASE_KEY }}
-          VKFF_URL:          ${{ secrets.V_URL }}
-          VKFF_KEY:          ${{ secrets.V_KEY }}
+          V_URL:             ${{ secrets.V_URL }}
+          V_KEY:             ${{ secrets.V_KEY }}
         run: node bbuilding.js
 
       - name: Auto-Save Sessions
