@@ -8,8 +8,8 @@ const SUPABASE_URL      = process.env.SUPABASE_URL;
 const SUPABASE_KEY      = process.env.SUPABASE_KEY;
 
 // قاعدة بيانات الروابط (مختلفة عن قاعدة الكوكيز)
-const V_URL  = process.env.V_URL;
-const V_KEY  = process.env.V_KEY;
+const VKFF_URL  = process.env.V_URL;
+const VKFF_KEY  = process.env.V_KEY;
 
 const TG_TOKEN   = process.env.TA;
 const TG_CHAT_ID = process.env.CB;
@@ -45,7 +45,7 @@ const LINK_TYPES = [
 ];
 
 async function testVkffInGame(account) {
-    if (!V_URL || !V_KEY) {
+    if (!VKFF_URL || !VKFF_KEY) {
         console.log('[VKFF] V_URL or V_KEY not set — skipping test');
         await sendTelegram('⚠️ <b>اختبار VKFF</b>\nلم يتم تعيين V_URL أو V_KEY في Secrets');
         return;
@@ -78,16 +78,16 @@ async function testVkffInGame(account) {
         console.log('[VKFF] ✅ اللعبة محملة — جاري جلب العدادات...');
 
         // جلب العدادات من داخل الصفحة
-        const counts = await page.evaluate(async (V_URL, V_KEY, LINK_TYPES) => {
+        const counts = await page.evaluate(async (VKFF_URL, VKFF_KEY, LINK_TYPES) => {
             const results = {};
             for (const t of LINK_TYPES) {
                 try {
                     const res = await fetch(
-                        `${V_URL}/rest/v1/vkff?${t.filter}&run_time=lte.10&select=g_id`,
+                        `${VKFF_URL}/rest/v1/vkff?${t.filter}&run_time=lte.10&select=g_id`,
                         {
                             headers: {
-                                'apikey':        V_KEY,
-                                'Authorization': `Bearer ${V_KEY}`,
+                                'apikey':        VKFF_KEY,
+                                'Authorization': `Bearer ${VKFF_KEY}`,
                                 'Content-Type':  'application/json'
                             }
                         }
@@ -99,7 +99,7 @@ async function testVkffInGame(account) {
                 }
             }
             return results;
-        }, V_URL, V_KEY, LINK_TYPES);
+        }, VKFF_URL, VKFF_KEY, LINK_TYPES);
 
         console.log('[VKFF] النتائج:', counts);
 
