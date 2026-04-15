@@ -63,14 +63,18 @@ async function testVkffInGame(account) {
         const page = await browser.newPage();
         await page.setViewport({ width: 1280, height: 720 });
 
-        // ضبط الكوكيز — واحد واحد لتجاوز أي قيمة غير صالحة
+        // ضبط الكوكيز — __Host- cookies بدون domain
         let cookiesSet = 0;
         for (const c of account.cookies) {
             try {
-                await page.setCookie({ name: c.name, value: String(c.value), domain: ".centurygames.com", path: "/" });
+                const isHostCookie = c.name.startsWith("__Host-");
+                const cookieObj = isHostCookie
+                    ? { name: c.name, value: String(c.value), path: "/", secure: true }
+                    : { name: c.name, value: String(c.value), domain: ".centurygames.com", path: "/" };
+                await page.setCookie(cookieObj);
                 cookiesSet++;
             } catch (e) {
-                console.log(`[VKFF] تجاوز كوكي: ${c.name}`);
+                console.log(`[VKFF] تجاوز كوكي: ${c.name} — ${e.message}`);
             }
         }
         console.log(`[VKFF] كوكيز مضبوطة: ${cookiesSet}/${account.cookies.length}`);
