@@ -1,7 +1,7 @@
 name: 🎁 Open Album Packs (11, 44, 45)
 on:
-  schedule:
-    - cron: '06 4 * * *'  # يعمل كل يوم الساعة 4:06 صباحاً
+#  schedule:
+   # - cron: '06 4 * * *'  # يعمل كل يوم الساعة 4:06 صباحاً
   workflow_dispatch:
 
 permissions:
