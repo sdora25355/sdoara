@@ -1,0 +1,50 @@
+name: 🎁 Open Album Packs (11, 44, 45 ,95)
+on:
+  schedule:
+    - cron: '06 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  open-packs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+
+    strategy:
+      fail-fast: false          # ← فشل حساب لا يوقف الباقين
+      matrix:
+        account_id: [11, 44, 45, 95]   # ← job منفصل لكل حساب
+
+    name: "🎁 Account ${{ matrix.account_id }}"
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 📦 Install dependencies
+        run: |
+          npm init -y
+          npm install puppeteer axios form-data
+
+      - name: 🎁 Run Open Packs Bot
+        env:
+          ACCOUNT_ID: ${{ matrix.account_id }}    # ← الجديد
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          SUPABASE_PACKS_URL: ${{ secrets.SUPABASE_PACKS_URL }}
+          SA: ${{ secrets.SA }}
+          FALCON: ${{ secrets.FALCON }}
+          TA: ${{ secrets.TA }}
+          CB: ${{ secrets.CB }}
+        run: node sorm.js
+
+      - name: 🧹 Cleanup
+        if: always()
+        run: rm -f screen_acc*.png || true
