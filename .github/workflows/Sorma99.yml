@@ -43,7 +43,7 @@ jobs:
           FALCON: ${{ secrets.FALCON }}
           TA: ${{ secrets.TA }}
           CB: ${{ secrets.CB }}
-        run: node sorm.js
+        run: node sorm999.js
 
       - name: 🧹 Cleanup
         if: always()
