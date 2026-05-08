@@ -114,9 +114,17 @@ function runBotForAccount(botCode, accountConfigJSON, label) {
             process.exit(1);
         }
 
+
+        // في الـ accountConfigJSON — أضف supabaseId
         const accountConfigJSON = JSON.stringify([{
-            id: acc.label, name, snsid, uid_session_key, cookies
+            id:              acc.label,
+            supabaseId:      acc.supabaseId,   // ← جديد (يحل مشكلة eq.1)
+            name,
+            snsid,
+            uid_session_key,
+            cookies
         }]);
+        
 
         console.log(`✅ Account loaded: ${acc.label} | cookies: ${cookies.length}`);
         await runBotForAccount(botCode, accountConfigJSON, acc.label);
