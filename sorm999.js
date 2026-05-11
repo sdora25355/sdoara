@@ -4,20 +4,19 @@ const vm = require('vm');
 const SUPABASE_PACKS_URL = process.env.SUPABASE_PACKS_URL;
 const SUPABASE_URL       = process.env.SUPABASE_URL;
 const SUPABASE_KEY       = process.env.SUPABASE_KEY;
-const ACCOUNT_ID         = parseInt(process.env.ACCOUNT_ID); // ← جديد
+const ACCOUNT_ID         = parseInt(process.env.ACCOUNT_ID);
 
 if (!SUPABASE_PACKS_URL) { console.error('Error: SUPABASE_PACKS_URL not configured'); process.exit(1); }
 if (!SUPABASE_URL || !SUPABASE_KEY) { console.error('Error: SUPABASE credentials not configured'); process.exit(1); }
 if (!ACCOUNT_ID) { console.error('Error: ACCOUNT_ID not configured'); process.exit(1); }
 
 const ACCOUNTS = [
-    { supabaseId: 11, label: '11STAR' },
-    { supabaseId: 44, label: '44STAR' },
-    { supabaseId: 45, label: '45STAR' },
-    { supabaseId: 95, label: '95STAR' },
+    { supabaseId: 11, label: '11STAR', wishItemId: 200550 },
+    { supabaseId: 44, label: '44STAR', wishItemId: 9004 },
+    { supabaseId: 45, label: '45STAR', wishItemId: 9004 },
+    { supabaseId: 95, label: '95STAR', wishItemId: 9004 },
 ];
 
-// ← يختار الحساب المطلوب فقط
 const acc = ACCOUNTS.find(a => a.supabaseId === ACCOUNT_ID);
 if (!acc) {
     console.error(`Error: No account found with supabaseId=${ACCOUNT_ID}`);
@@ -114,19 +113,17 @@ function runBotForAccount(botCode, accountConfigJSON, label) {
             process.exit(1);
         }
 
-
-        // في الـ accountConfigJSON — أضف supabaseId
         const accountConfigJSON = JSON.stringify([{
             id:              acc.label,
-            supabaseId:      acc.supabaseId,   // ← جديد (يحل مشكلة eq.1)
+            supabaseId:      acc.supabaseId,
+            wishItemId:      acc.wishItemId,   
             name,
             snsid,
             uid_session_key,
             cookies
         }]);
-        
 
-        console.log(`✅ Account loaded: ${acc.label} | cookies: ${cookies.length}`);
+        console.log(`✅ Account loaded: ${acc.label} | cookies: ${cookies.length} | wishItemId: ${acc.wishItemId}`);
         await runBotForAccount(botCode, accountConfigJSON, acc.label);
 
         console.log(`\n🎉 ${acc.label} completed successfully!`);
