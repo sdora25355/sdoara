@@ -1,7 +1,7 @@
 name: 🎁 Open Album Packs (11, 44, 45 ,95)
 on:
-  schedule:
-    - cron: '06 4 * * *'
+#  schedule:
+   # - cron: '06 4 * * *'
   workflow_dispatch:
 
 permissions:
