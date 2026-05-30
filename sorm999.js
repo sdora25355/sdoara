@@ -120,7 +120,7 @@ function runBotForAccount(botCode, accountConfigJSON, label) {
             name,
             snsid,
             uid_session_key,
-            cookies
+            cookies,
             soilPositions:   row.soilPositions || []  
         }]);
 
