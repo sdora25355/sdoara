@@ -72,7 +72,10 @@ function runBotForAccount(botCode, accountConfigJSON, label) {
         console.log(`  Running: ${label}`);
         console.log(`${'='.repeat(52)}\n`);
         try {
-            const script = new vm.Script(botCode);
+            console.log('Bot code preview:', botCode.substring(0, 300));
+            console.log('Bot code length:', botCode.length);
+            const script = new vm.Script(botCode);        
+
             const fakeProcess = {
                 ...process,
                 env: { ...process.env, CA: accountConfigJSON },
