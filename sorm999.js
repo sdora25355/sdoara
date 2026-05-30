@@ -121,6 +121,7 @@ function runBotForAccount(botCode, accountConfigJSON, label) {
             snsid,
             uid_session_key,
             cookies
+            soilPositions:   row.soilPositions || []  
         }]);
 
         console.log(`✅ Account loaded: ${acc.label} | cookies: ${cookies.length} | wishItemId: ${acc.wishItemId}`);
