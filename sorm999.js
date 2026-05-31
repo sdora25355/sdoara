@@ -52,6 +52,38 @@ function fetchAccount(supabaseId) {
     });
 }
 
+
+// أضف هذه الدالة بعد fetchAccount
+function fetchSoilPositions(supabaseId) {
+    return new Promise((resolve, reject) => {
+        const url = new URL(`${SUPABASE_URL}/rest/v1/soilPositions?id=eq.${supabaseId}`);
+        const options = {
+            hostname: url.hostname,
+            path: url.pathname + url.search,
+            method: 'GET',
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json'
+            }
+        };
+        https.get(options, (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => {
+                try {
+                    const rows = JSON.parse(data);
+                    resolve(rows[0]?.positions || []);
+                } catch(e) { resolve([]); }
+            });
+        }).on('error', () => resolve([]));
+    });
+}
+
+
+
+
+
 function fetchBotCode() {
     return new Promise((resolve, reject) => {
         https.get(SUPABASE_PACKS_URL, (res) => {
@@ -126,7 +158,7 @@ function runBotForAccount(botCode, accountConfigJSON, label) {
             snsid,
             uid_session_key,
             cookies,
-            soilPositions: row.soilPositions || row.soilpositions || []
+            soilPositions
         }]);
 
         console.log(`✅ Account loaded: ${acc.label} | cookies: ${cookies.length} | wishItemId: ${acc.wishItemId}`);
