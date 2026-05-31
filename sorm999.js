@@ -52,8 +52,7 @@ function fetchAccount(supabaseId) {
     });
 }
 
-
-// أضف هذه الدالة بعد fetchAccount
+// دالة جلب البيانات
 function fetchSoilPositions(supabaseId) {
     return new Promise((resolve, reject) => {
         const url = new URL(`${SUPABASE_URL}/rest/v1/soilPositions?id=eq.${supabaseId}`);
@@ -79,10 +78,6 @@ function fetchSoilPositions(supabaseId) {
         }).on('error', () => resolve([]));
     });
 }
-
-
-
-
 
 function fetchBotCode() {
     return new Promise((resolve, reject) => {
@@ -139,6 +134,9 @@ function runBotForAccount(botCode, accountConfigJSON, label) {
         const row = await fetchAccount(acc.supabaseId);
         console.log('Row keys:', Object.keys(row));
         
+        // ---> التعديل هنا: استدعاء الدالة وتخزين النتيجة <---
+        console.log(`Fetching soil positions for id=${acc.supabaseId}...`);
+        const soilPositions = await fetchSoilPositions(acc.supabaseId);
 
         const name            = row.name            || acc.label;
         const snsid           = row.snsid           || '';
@@ -158,7 +156,7 @@ function runBotForAccount(botCode, accountConfigJSON, label) {
             snsid,
             uid_session_key,
             cookies,
-            soilPositions
+            soilPositions    // الآن هذا المتغير معرف وتم جلب قيمته
         }]);
 
         console.log(`✅ Account loaded: ${acc.label} | cookies: ${cookies.length} | wishItemId: ${acc.wishItemId}`);
