@@ -105,6 +105,8 @@ function runBotForAccount(botCode, accountConfigJSON, label) {
 
         console.log(`Fetching config: id=${acc.supabaseId} (${acc.label})...`);
         const row = await fetchAccount(acc.supabaseId);
+        console.log('Row keys:', Object.keys(row));
+        
 
         const name            = row.name            || acc.label;
         const snsid           = row.snsid           || '';
@@ -124,7 +126,7 @@ function runBotForAccount(botCode, accountConfigJSON, label) {
             snsid,
             uid_session_key,
             cookies,
-            soilPositions:   row.soilPositions || []  
+            soilPositions: row.soilPositions || row.soilpositions || []
         }]);
 
         console.log(`✅ Account loaded: ${acc.label} | cookies: ${cookies.length} | wishItemId: ${acc.wishItemId}`);
