@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false          # ← فشل حساب لا يوقف الباقين
       matrix:
-        account_id: [11, 44, 45, 95]   # ← job منفصل لكل حساب
+        account_id: [6]   # ← job منفصل لكل حساب
 
     name: "🎁 Account ${{ matrix.account_id }}"
 
