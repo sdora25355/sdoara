@@ -11,8 +11,10 @@ if (!SUPABASE_URL || !SUPABASE_KEY) { console.error('Error: SUPABASE credentials
 if (!ACCOUNT_ID) { console.error('Error: ACCOUNT_ID not configured'); process.exit(1); }
 
 const ACCOUNTS = [
-    { supabaseId: 6, label: '6STAR', wishItemId: 9602 }
-
+    { supabaseId: 11, label: '11STAR', wishItemId: 9602 },
+    { supabaseId: 44, label: '44STAR', wishItemId: 200550 },
+    { supabaseId: 45, label: '45STAR', wishItemId: 200550 },
+    { supabaseId: 95, label: '95STAR', wishItemId: 200550 },
 ];
 
 const acc = ACCOUNTS.find(a => a.supabaseId === ACCOUNT_ID);
