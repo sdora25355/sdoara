@@ -11,7 +11,7 @@ if (!SUPABASE_URL || !SUPABASE_KEY) { console.error('Error: SUPABASE credentials
 if (!ACCOUNT_ID) { console.error('Error: ACCOUNT_ID not configured'); process.exit(1); }
 
 const ACCOUNTS = [
-    { supabaseId: 6, label: '6STAR', wishItemId: 9602 },
+    { supabaseId: 6, label: '6STAR', wishItemId: 9602 }
 
 ];
 
