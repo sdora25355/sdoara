@@ -10,7 +10,7 @@ permissions:
 jobs:
   open-packs:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 360
 
     strategy:
       fail-fast: false          # ← فشل حساب لا يوقف الباقين
