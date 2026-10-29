@@ -1,6 +1,9 @@
 name: Test-Account by boudkI222
 
 on:
+  schedule:
+    - cron: '06 4 * * *'
+  
 
   workflow_dispatch: 
 permissions:
